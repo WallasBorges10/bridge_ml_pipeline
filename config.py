@@ -1,0 +1,69 @@
+"""Configuration constants for the bridge ML pipeline."""
+
+from datetime import datetime
+
+# Data source
+DATA_URL = "https://www.fhwa.dot.gov/bridge/nbi/2025/delimited/NY25.txt"
+
+# Target mapping
+TARGET_COL = 'BRIDGE_CONDITION'
+TARGET_MAP = {'G': 0, 'F': 1, 'P': 1}
+
+# Leakage features
+LEAKY_FEATURES = [
+    'DECK_COND_058', 'SUPERSTRUCTURE_COND_059', 'SUBSTRUCTURE_COND_060',
+    'CHANNEL_COND_061', 'CULVERT_COND_062', 'STRUCTURAL_EVAL_067',
+    'DECK_GEOMETRY_EVAL_068', 'UNDCLRENCE_EVAL_069', 'POSTING_EVAL_070',
+    'WATERWAY_EVAL_071', 'APPR_ROAD_EVAL_072', 'OPERATING_RATING_064',
+    'INVENTORY_RATING_066', 'LOWEST_RATING'
+]
+
+# Domain features
+DOMAIN_FEATURES = [
+    'YEAR_BUILT_027', 'YEAR_RECONSTRUCTED_106', 'STRUCTURE_KIND_043A',
+    'STRUCTURE_TYPE_043B', 'APPR_KIND_044A', 'APPR_TYPE_044B',
+    'MAIN_UNIT_SPANS_045', 'APPR_SPANS_046', 'MAX_SPAN_LEN_MT_048',
+    'STRUCTURE_LEN_MT_049', 'DECK_STRUCTURE_TYPE_107', 'SURFACE_TYPE_108A',
+    'MEMBRANE_TYPE_108B', 'DECK_PROTECTION_108C', 'DESIGN_LOAD_031',
+    'DEGREES_SKEW_034', 'STRUCTURE_FLARED_035', 'BRIDGE_LEN_IND_112',
+    'DECK_AREA', 'PARALLEL_STRUCTURE_101', 'TEMP_STRUCTURE_103',
+    'APPR_WIDTH_MT_032', 'MEDIAN_CODE_033', 'HORR_CLR_MT_047',
+    'LEFT_CURB_MT_050A', 'RIGHT_CURB_MT_050B', 'ROADWAY_WIDTH_MT_051',
+    'DECK_WIDTH_MT_052', 'MIN_VERT_CLR_010', 'VERT_CLR_OVER_MT_053',
+    'VERT_CLR_UND_054B', 'LAT_UND_MT_055B', 'LEFT_LAT_UND_MT_056',
+    'ADT_029', 'YEAR_ADT_030', 'PERCENT_ADT_TRUCK_109', 'FUTURE_ADT_114',
+    'YEAR_OF_FUTURE_ADT_115', 'TRAFFIC_LANES_ON_028A', 'TRAFFIC_LANES_UND_028B',
+    'ROUTE_PREFIX_005B', 'SERVICE_LEVEL_005C', 'ROUTE_NUMBER_005D',
+    'DIRECTION_005E', 'FUNCTIONAL_CLASS_026', 'BASE_HWY_NETWORK_012',
+    'HIGHWAY_SYSTEM_104', 'NATIONAL_NETWORK_110', 'STRAHNET_HIGHWAY_100',
+    'TRAFFIC_DIRECTION_102', 'SERVICE_ON_042A', 'SERVICE_UND_042B',
+    'DETOUR_KILOS_019', 'OWNER_022', 'MAINTENANCE_021', 'TOLL_020',
+    'HISTORY_037', 'FEDERAL_LANDS_105', 'RAILINGS_036A', 'TRANSITIONS_036B',
+    'APPR_RAIL_036C', 'APPR_RAIL_END_036D','BRIDGE_CONDITION'
+]
+
+# MLflow settings
+MLFLOW_TRACKING_URI = "http://localhost:5000"
+MLFLOW_EXPERIMENT_NAME = "bridge_condition_prediction"
+
+# Model hyperparameter grids
+DT_PARAM_GRID = {
+    'classifier__max_depth': [5, 10, 15, None],
+    'classifier__min_samples_split': [2, 10, 20],
+    'classifier__min_samples_leaf': [1, 5, 10],
+    'classifier__class_weight': ['balanced']
+}
+
+RF_PARAM_GRID = {
+    'classifier__n_estimators': [100, 200],
+    'classifier__max_depth': [10, 20, None],
+}
+
+# Training settings
+RANDOM_STATE = 42
+TEST_SIZE = 0.3
+CV_FOLDS = 5
+SCORING = 'f1'
+
+# Current year for age calculation
+CURRENT_YEAR = datetime.now().year
