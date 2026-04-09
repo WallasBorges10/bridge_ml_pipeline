@@ -78,12 +78,12 @@ def run_training(output_dir='.'):
             'Decision Tree': dt_metrics,
             'Random Forest': rf_metrics
         }
-        plot_comparison(metrics_dict, os.path.join(output_dir, 'comparacao_modelos.png'))
-        plot_confusion_matrix(rf_grid.best_estimator_, X_test, y_test, os.path.join(output_dir, 'matriz_confusao.png'))
-        plot_feature_importance(rf_grid.best_estimator_, os.path.join(output_dir, 'importancia_features.png'))
+        plot_comparison(metrics_dict, os.path.join(output_dir, 'output/comparacao_modelos.png'))
+        plot_confusion_matrix(rf_grid.best_estimator_, X_test, y_test, os.path.join(output_dir, 'output/matrizes_confusao.png'))
+        plot_feature_importance(rf_grid.best_estimator_, os.path.join(output_dir, 'output/importancia_features.png'))
 
         # Log dos gráficos como artefatos
-        for fname in ['comparacao_modelos.png', 'matriz_confusao.png', 'importancia_features.png']:
+        for fname in ['output/comparacao_modelos.png', 'output/matrizes_confusao.png', 'output/importancia_features.png']:
             log_artifact_if_needed(os.path.join(output_dir, fname))
 
         # 7. Salvar sample_input.csv e logar
@@ -93,7 +93,7 @@ def run_training(output_dir='.'):
         log_artifact_if_needed(sample_path)
 
         # 8. Salvar modelo final e logar como artefato e no Model Registry
-        final_model_path = os.path.join(output_dir, 'modelo_pontes_ny_rf_deploy.joblib')
+        final_model_path = os.path.join(output_dir, 'output/modelo_pontes_ny_rf_deploy.joblib')
         joblib.dump(rf_grid.best_estimator_, final_model_path)
         log_artifact_if_needed(final_model_path)
 
