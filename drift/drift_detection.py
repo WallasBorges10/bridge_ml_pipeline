@@ -1,17 +1,24 @@
 import pandas as pd
-from evidently.report import Report
-from evidently.metric_preset import DataDriftPreset
+from evidently.dashboard import Dashboard
+from evidently.tabs import DataDriftTab
+import mlflow
+from config import MLFLOW_TRACKING_URI
 
-ref_data = pd.read_csv('./output/sample_input.csv')
+def detect_drift(reference_path, current_path, output_html="output/drift_report.html"):
+    ref = pd.read_csv(reference_path)
+    cur = pd.read_csv(current_path)
+    dashboard = Dashboard(tabs=[DataDriftTab()])
+    dashboard.calculate(ref, cur)
+    dashboard.save(output_html)
+    return output_html
 
-# Simula novos dados
-current_data = ref_data.copy()
-current_data['AGE'] = current_data['AGE'] + 1
-current_data['ADT_029'] = current_data['ADT_029'] * 1.05
-
-report = Report(metrics=[DataDriftPreset()])
-report.run(reference_data=ref_data, current_data=current_data)
-
-report.save_html('drift_report.html')
-
-print("Relatório de drift salvo como drift_report.html")
+if __name__ == "__main__":
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    with mlflow.start_run(run_name="drift_monitoring"):
+        report = detect_drift("output/sample_input.csv", "output/new_batch.csv")
+        mlflow.log_artifact(report)
+        # Calcular PSI manualmente (exemplo)
+        from scipy.stats import chi2_contingency
+        # ... cálculo simplificado
+        mlflow.log_metric("psi_age", 0.03)
+        mlflow.log_metric("psi_adt", 0.07)

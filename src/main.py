@@ -7,15 +7,22 @@ import logging
 import joblib
 import mlflow
 import mlflow.sklearn
-from sklearn.model_selection import train_test_split
 
 from config import RANDOM_STATE, TEST_SIZE, MLFLOW_TRACKING_URI, MLFLOW_EXPERIMENT_NAME
+from config import RF_PARAM_GRID, DT_PARAM_GRID, CV_FOLDS, SCORING, TEST_SIZE, RANDOM_STATE, TARGET_COL, TARGET_MAP, LEAKY_FEATURES, DOMAIN_FEATURES, SCORING
 from data_loader import load_data, clean_data, remove_leakage, select_domain_features
 from preprocessing import engineer_features, create_target
 from pipeline_builder import build_preprocessor
 from train import train_perceptron, train_decision_tree, train_random_forest
 from evaluate import evaluate_model
 from plots import plot_comparison, plot_confusion_matrix, plot_feature_importance, log_artifact_if_needed
+from pipeline_builder import build_pipeline_with_pca, build_pipeline_with_lda
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import Perceptron
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
+
 
 # Configuração de logging
 logging.basicConfig(
@@ -62,6 +69,20 @@ def run_training(output_dir='.'):
         dt_grid = train_decision_tree(X_train, y_train, preprocessor)
         rf_grid = train_random_forest(X_train, y_train, preprocessor)
 
+        # Random Forest com PCA
+        pipeline_rf_pca = build_pipeline_with_pca(preprocessor, 
+            RandomForestClassifier(class_weight='balanced', random_state=RANDOM_STATE))
+        grid_rf_pca = GridSearchCV(pipeline_rf_pca, RF_PARAM_GRID, cv=CV_FOLDS, scoring=SCORING, n_jobs=-1)
+        grid_rf_pca.fit(X_train, y_train)
+        mlflow.log_metrics(evaluate_model(grid_rf_pca.best_estimator_, X_test, y_test, "RF_PCA"))
+
+        # Random Forest com LDA
+        pipeline_rf_lda = build_pipeline_with_lda(preprocessor, 
+            RandomForestClassifier(class_weight='balanced', random_state=RANDOM_STATE))
+        grid_rf_lda = GridSearchCV(pipeline_rf_lda, RF_PARAM_GRID, cv=CV_FOLDS, scoring=SCORING, n_jobs=-1)
+        grid_rf_lda.fit(X_train, y_train)
+        mlflow.log_metrics(evaluate_model(grid_rf_lda.best_estimator_, X_test, y_test, "RF_LDA"))
+
         # 5. Avaliar (métricas logadas na run principal)
         perc_metrics = evaluate_model(perc_model, X_test, y_test, "Perceptron")
         dt_metrics = evaluate_model(dt_grid.best_estimator_, X_test, y_test, "DecisionTree")
@@ -78,12 +99,12 @@ def run_training(output_dir='.'):
             'Decision Tree': dt_metrics,
             'Random Forest': rf_metrics
         }
-        plot_comparison(metrics_dict, os.path.join(output_dir, 'output/comparacao_modelos.png'))
-        plot_confusion_matrix(rf_grid.best_estimator_, X_test, y_test, os.path.join(output_dir, 'output/matrizes_confusao.png'))
-        plot_feature_importance(rf_grid.best_estimator_, os.path.join(output_dir, 'output/importancia_features.png'))
+        plot_comparison(metrics_dict, os.path.join(output_dir, 'comparacao_modelos.png'))
+        plot_confusion_matrix(rf_grid.best_estimator_, X_test, y_test, os.path.join(output_dir, 'matrizes_confusao.png'))
+        plot_feature_importance(rf_grid.best_estimator_, os.path.join(output_dir, 'importancia_features.png'))
 
         # Log dos gráficos como artefatos
-        for fname in ['output/comparacao_modelos.png', 'output/matrizes_confusao.png', 'output/importancia_features.png']:
+        for fname in ['comparacao_modelos.png', 'matrizes_confusao.png', 'importancia_features.png']:
             log_artifact_if_needed(os.path.join(output_dir, fname))
 
         # 7. Salvar sample_input.csv e logar
@@ -93,7 +114,7 @@ def run_training(output_dir='.'):
         log_artifact_if_needed(sample_path)
 
         # 8. Salvar modelo final e logar como artefato e no Model Registry
-        final_model_path = os.path.join(output_dir, 'output/modelo_pontes_ny_rf_deploy.joblib')
+        final_model_path = os.path.join(output_dir, 'modelo_pontes_ny_rf_deploy.joblib')
         joblib.dump(rf_grid.best_estimator_, final_model_path)
         log_artifact_if_needed(final_model_path)
 
@@ -112,13 +133,15 @@ def run_prediction(model_path: str, sample_path: str):
     sample = load_sample_input(sample_path)
     predict(model, sample)
 
+
+
 def main():
     parser = argparse.ArgumentParser(description="Bridge Condition Prediction Pipeline")
     parser.add_argument('--mode', choices=['train', 'predict'], default='train',
                         help="Run training pipeline or load model for prediction")
     parser.add_argument('--model_path', type=str, default='modelo_pontes_ny_rf_deploy.joblib',
                         help="Path to saved model (for predict mode)")
-    parser.add_argument('--sample_path', type=str, default='./output/sample_input.csv',
+    parser.add_argument('--sample_path', type=str, default='sample_input.csv',
                         help="Path to sample input CSV (for predict mode)")
     parser.add_argument('--output_dir', type=str, default='.',
                         help="Directory to save models and plots")

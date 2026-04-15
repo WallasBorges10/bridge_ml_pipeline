@@ -4,7 +4,7 @@ Este projeto implementa um pipeline completo de machine learning para classifica
 
 ## Objetivo
 
-Construir um sistema de ML reproduzível, versionado e monitorável, desde a fundação dos dados até a operação em produção, utilizando scikit‑learn e MLflow.
+Construir um sistema de ML reproduzível, versionado e monitorável, desde a ingestão dos dados até a operação em produção, utilizando scikit‑learn e MLflow.
 
 ## Estrutura do Repositório
 

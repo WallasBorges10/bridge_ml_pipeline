@@ -7,6 +7,9 @@ from sklearn.impute import SimpleImputer
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 import logging
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +44,16 @@ def create_pipeline(preprocessor, classifier):
         ('classifier', classifier)
     ])
 
-def build_pipeline_with_pca(preprocessor, n_components=0.95):
+def build_pipeline_with_pca(preprocessor, classifier, n_components=0.95):
     return Pipeline([
         ('preprocessor', preprocessor),
         ('pca', PCA(n_components=n_components)),
-        ('classifier', RandomForestClassifier(...))
+        ('classifier', classifier)
+    ])
+
+def build_pipeline_with_lda(preprocessor, classifier, n_components=1):
+    return Pipeline([
+        ('preprocessor', preprocessor),
+        ('lda', LDA(n_components=n_components)),
+        ('classifier', classifier)
     ])

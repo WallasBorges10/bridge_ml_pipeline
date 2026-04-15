@@ -1,0 +1,31 @@
+name: ML Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  train-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Train model
+        run: python main.py --mode train --output_dir ./models
+      - name: Serve model (simulated)
+        run: |
+          mlflow models serve -m ./models/modelo_pontes_ny_rf_deploy.joblib -p 5002 &
+          sleep 5
+          curl -X POST http://localhost:5002/invocations -H "Content-Type: application/json" -d @sample_input.json
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: models
+          path: ./models/
