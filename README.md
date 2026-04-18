@@ -1,54 +1,52 @@
-# Bridge Condition Prediction – ML Pipeline
+# 🏗️ Projeto de Engenharia de Machine Learning: Classificação de Pontes
 
-[![ML Pipeline](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ml_pipeline.yml/badge.svg)](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ml_pipeline.yml)
-[![Monitoramento](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/monitoring.yml/badge.svg)](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/monitoring.yml)
+[![MLflow](https://img.shields.io/badge/MLflow-Tracking-blue)](http://localhost:5000)
+[![CI/CD](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/WallasBorges10/bridge_ml_pipeline/actions)
 
-Projeto de engenharia de machine learning para classificação de condição de pontes usando dados do NBI (National Bridge Inventory). O pipeline inclui preparação de dados, experimentação com múltiplos modelos (Perceptron, Decision Tree, Random Forest), redução de dimensionalidade (PCA, LDA), rastreamento com MLflow, API de inferência, detecção de drift e CI/CD.
+## 📌 Visão Geral
+Este repositório consolida a transição de um projeto de modelagem exploratória para um **sistema de Machine Learning profissional**. O objetivo técnico é estruturar um pipeline reprodutível para classificação de condições de pontes, utilizando `scikit-learn` e `MLflow`, com foco em **rastreabilidade, controle de complexidade e simulação de produção**.
 
-## 📦 Estrutura do repositório
+## 🎯 Objetivos de Negócio e Técnicos
+- **Negócio:** Prever a condição estrutural de pontes para priorizar inspeções e alocar recursos de manutenção de forma eficiente.
+- **Técnico:** Desenvolver um sistema que balanceie **desempenho preditivo (F1-Score)** com **custo computacional** e **interpretabilidade**, garantindo reprodutibilidade via pipelines e monitoramento contínuo.
 
-# Bridge Condition Prediction – ML Engineering Project
+## 🚀 Como Executar
 
-Este projeto implementa um pipeline completo de machine learning para classificação da condição de pontes (Good vs. Critical/Fair/Poor) usando dados do NBI (National Bridge Inventory) do estado de Nova York.
+### 1. Clone e Prepare o Ambiente
+```bash
+git clone https://github.com/WallasBorges10/bridge_ml_pipeline.git
+cd bridge_ml_pipeline
+python -m venv venv
+source venv/bin/activate  # ou .\venv\Scripts\activate no Windows
+pip install -r requirements.txt
+```
 
-## Objetivo
+### 2. Execute o Pipeline de Treinamento (Rastreamento MLflow)
+- Inicie o servidor de UI do MLflow em um terminal separado
+   mlflow ui
+- Execute o script principal de experimentação
+   python src/main.py
 
-Construir um sistema de ML reproduzível, versionado e monitorável, desde a ingestão dos dados até a operação em produção, utilizando scikit‑learn e MLflow.
+Acesse http://localhost:5000 para comparar os experimentos.
 
-## Estrutura do Repositório
+### 3. Simule a API de Produção
+- python src/app.py
+Envie uma requisição POST para http://localhost:5001/predict com um JSON de features.
 
-bridge_ml_pipeline/
-├── .github/workflows/ # Pipelines CI/CD e monitoramento
-├── src/ # Código principal (modular)
-├── tests/ # Testes unitários (pytest)
-├── drift/ # Detecção de drift
-├── output/ # Modelos, gráficos e amostras (gerado)
-├── requirements.txt
-├── README.md
-└── RELATORIO.md # Relatório técnico completo
+# 4. Executar Testes e CI/CD (Simulado)
+- pytest tests/
+O pipeline de CI/CD está configurado em .github/workflows/ci.yml e valida testes e linting automaticamente.
 
-
-## Requisitos
-
-- Python 3.10+
-- Bibliotecas listadas em `requirements.txt`
-
-## Como executar
-
-1. Servidor
-   mlflow ui --backend-store-uri sqlite:///mlflow.db --host 0.0.0.0 --port 5000
-
-2. Verificação dos testes
-   pytest tests/ -v --cov=src
-
-3. Treinamento
-   python src/main.py --mode train --output_dir ./output
-
-4. Clone o repositório e crie um ambiente virtual:
-   ```bash
-   git clone https://github.com/seu-usuario/bridge_ml_pipeline.git
-   cd bridge_ml_pipeline
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   # ou .\venv\Scripts\activate (Windows)
-   pip install -r requirements.txt
+# 🧱 Estrutura do Projeto (Engenharia)
+.
+├── .github/workflows/      # CI/CD (Testes Automatizados)
+├── data/                   # Dados Brutos e Processados
+├── notebooks/              # Exploração (Apenas Visualização)
+├── src/                    # Código Fonte Modular (Reutilizável)
+│   ├── data/               # Ingestão e Pré-processamento
+│   ├── models/             # Treinamento e Persistência
+│   └── app.py              # API Flask para Inferência
+├── tests/                  # Testes Unitários
+├── RELATORIO.md            # Documento Técnico Completo (Análise Crítica)
+├── requirements.txt        # Dependências Exatas
+└── README.md               # Este Arquivo

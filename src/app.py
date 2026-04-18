@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify
-import mlflow.pyfunc
+import joblib
 import pandas as pd
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Carrega o modelo registrado no MLflow (estágio Production)
-model = mlflow.pyfunc.load_model("models:/BridgeConditionRF/Production")
+# Carrega o modelo do arquivo local
+model = joblib.load("./output/modelo_pontes_ny_rf_deploy.joblib")
 
 @app.route('/predict', methods=['POST'])
 def predict():
