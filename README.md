@@ -1,3 +1,12 @@
+# Bridge Condition Prediction – ML Pipeline
+
+[![ML Pipeline](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ml_pipeline.yml/badge.svg)](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ml_pipeline.yml)
+[![Monitoramento](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/monitoring.yml/badge.svg)](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/monitoring.yml)
+
+Projeto de engenharia de machine learning para classificação de condição de pontes usando dados do NBI (National Bridge Inventory). O pipeline inclui preparação de dados, experimentação com múltiplos modelos (Perceptron, Decision Tree, Random Forest), redução de dimensionalidade (PCA, LDA), rastreamento com MLflow, API de inferência, detecção de drift e CI/CD.
+
+## 📦 Estrutura do repositório
+
 # Bridge Condition Prediction – ML Engineering Project
 
 Este projeto implementa um pipeline completo de machine learning para classificação da condição de pontes (Good vs. Critical/Fair/Poor) usando dados do NBI (National Bridge Inventory) do estado de Nova York.
@@ -9,24 +18,14 @@ Construir um sistema de ML reproduzível, versionado e monitorável, desde a ing
 ## Estrutura do Repositório
 
 bridge_ml_pipeline/
-├── .github/workflows/ # CI/CD simulado
-├── src/ # Código principal
-│ ├── config.py
-│ ├── data_loader.py
-│ ├── preprocessing.py
-│ ├── pipeline_builder.py
-│ ├── train.py
-│ ├── evaluate.py
-│ ├── plots.py
-│ ├── predict.py
-│ ├── main.py
-│ └── app.py # API Flask
-├── notebooks/ # Exploração inicial
-├── tests/ # Testes unitários
+├── .github/workflows/ # Pipelines CI/CD e monitoramento
+├── src/ # Código principal (modular)
+├── tests/ # Testes unitários (pytest)
 ├── drift/ # Detecção de drift
-├── output/ # Modelos e artefatos gerados
+├── output/ # Modelos, gráficos e amostras (gerado)
 ├── requirements.txt
-└── README.md
+├── README.md
+└── RELATORIO.md # Relatório técnico completo
 
 
 ## Requisitos
@@ -36,7 +35,16 @@ bridge_ml_pipeline/
 
 ## Como executar
 
-1. Clone o repositório e crie um ambiente virtual:
+1. Servidor
+   mlflow ui --backend-store-uri sqlite:///mlflow.db --host 0.0.0.0 --port 5000
+
+2. Verificação dos testes
+   pytest tests/ -v --cov=src
+
+3. Treinamento
+   python src/main.py --mode train --output_dir ./output
+
+4. Clone o repositório e crie um ambiente virtual:
    ```bash
    git clone https://github.com/seu-usuario/bridge_ml_pipeline.git
    cd bridge_ml_pipeline
