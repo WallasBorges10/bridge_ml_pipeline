@@ -67,16 +67,16 @@ pip install -r requirements.txt
 
 ### 2\. Ciclo de Treinamento e Rastreamento
 
-Para rodar o pipeline completo e registrar no MLflow:
-
-```bash
-python src/main.py --mode train --output_dir ./output
-```
-
 Para visualizar a UI do MLflow:
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+Em novo terminal para rodar o pipeline completo e registrar no MLflow:
+
+```bash
+python src/main.py --mode train --output_dir ./output
 ```
 
 ### 3\. Servindo o Modelo (API e UI)
@@ -115,8 +115,9 @@ O projeto implementa práticas modernas de **MLOps**:
 
 ## 🎥 Demonstração
 
-*(Vídeo em breve - Demonstrando o uso do Dashboard Streamlit e predições em lote)*
-
+PARTE 1 - https://drive.google.com/file/d/1BErNj2_vjrL5V09ZhKqNzkJeq7IrUdL1/view?usp=sharing
+PARTE 2 - https://drive.google.com/file/d/1yKQDW8v5ZsjKuYm2kYXGVGsvebxLs6O6/view?usp=sharing
+APRESENTAÇÃO - https://drive.google.com/file/d/1eLUznOt6T2L8gz_gChyhX3krao1hgSXG/view?usp=sharing
 -----
 
-**Desenvolvido por Wallas Borges** – *Projeto Acadêmico para Pós-Graduação em MLOps.*
+**Desenvolvido por Wallas Borges** – *Projeto Acadêmico para Pós-Graduação em Engenharia de Machine Learning e Deep Learning.*
