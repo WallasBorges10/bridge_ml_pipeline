@@ -49,4 +49,4 @@ O pipeline de CI/CD está configurado em .github/workflows/ci.yml e valida teste
 ├── tests/                  # Testes Unitários
 ├── RELATORIO.md            # Documento Técnico Completo (Análise Crítica)
 ├── requirements.txt        # Dependências Exatas
-└── README.md               # Este Arquivo
+└── README.md               # Este Arquivo  
