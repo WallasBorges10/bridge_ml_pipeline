@@ -113,7 +113,7 @@ O projeto implementa práticas modernas de **MLOps**:
 
 -----
 
-## 🎥 Demonstração
+## 🎥 Demonstração e Apresentação
 
 PARTE 1 - https://drive.google.com/file/d/1BErNj2_vjrL5V09ZhKqNzkJeq7IrUdL1/view?usp=sharing
 PARTE 2 - https://drive.google.com/file/d/1yKQDW8v5ZsjKuYm2kYXGVGsvebxLs6O6/view?usp=sharing
