@@ -1,52 +1,130 @@
-# 🏗️ Projeto de Engenharia de Machine Learning: Classificação de Pontes
+Este `README.md` está excelente e muito completo\! Ele já cobre os pilares fundamentais de um projeto de **Engenharia de ML (MLOps)**.
 
-[![MLflow](https://img.shields.io/badge/MLflow-Tracking-blue)](http://localhost:5000)
-[![CI/CD](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/WallasBorges10/bridge_ml_pipeline/actions)
+Para dar aquele toque final de "nível profissional", organizei as seções para ficarem mais escaneáveis, adicionei ícones para facilitar a leitura e melhorei a hierarquia visual. Também incluí uma seção de **Tecnologias Utilizadas** para destacar seu *stack* técnico.
+
+Aqui está a versão aprimorada:
+
+-----
+
+# 🌉 Bridge Condition Prediction – ML Pipeline
+
+[](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ml_pipeline.yml)
+[](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/monitoring.yml)
 
 ## 📌 Visão Geral
-Este repositório consolida a transição de um projeto de modelagem exploratória para um **sistema de Machine Learning profissional**. O objetivo técnico é estruturar um pipeline reprodutível para classificação de condições de pontes, utilizando `scikit-learn` e `MLflow`, com foco em **rastreabilidade, controle de complexidade e simulação de produção**.
 
-## 🎯 Objetivos de Negócio e Técnicos
-- **Negócio:** Prever a condição estrutural de pontes para priorizar inspeções e alocar recursos de manutenção de forma eficiente.
-- **Técnico:** Desenvolver um sistema que balanceie **desempenho preditivo (F1-Score)** com **custo computacional** e **interpretabilidade**, garantindo reprodutibilidade via pipelines e monitoramento contínuo.
+Este é um projeto de **Engenharia de Machine Learning** focado na classificação das condições de pontes utilizando dados reais do **National Bridge Inventory (NBI)**.
+
+O objetivo é prever se uma ponte está em estado **Crítico** ou **Bom**, permitindo a priorização inteligente de inspeções e manutenção. O projeto vai além do modelo: ele abrange todo o ciclo de vida (ML Lifecycle), desde a ingestão modular até o monitoramento de drift em produção.
+
+-----
+
+## 🛠️ Tecnologias e Ferramentas
+
+  * **Modelagem:** Scikit-learn (Random Forest, Decision Tree, Perceptron)
+  * **Rastreamento:** MLflow (Métricas, Parâmetros e Model Registry)
+  * **Interface:** Streamlit (Dashboard Interativo)
+  * **Serviço:** Flask (API REST de Inferência)
+  * **MLOps:** Evidently AI (Drift), PSI, GitHub Actions (CI/CD)
+  * **Qualidade:** Pytest (Testes Unitários)
+
+-----
+
+## 📂 Estrutura do Projeto
+
+```text
+bridge_ml_pipeline/
+├── .github/workflows/    # Automação CI/CD (Treino e Monitoramento)
+├── src/                  # Core do Pipeline (Modularizado)
+│   ├── config.py         # Hiperparâmetros e configurações
+│   ├── data_loader.py    # Ingestão e limpeza (Remoção de Leakage)
+│   ├── preprocessing.py  # Feature Engineering (AGE, TRAFFIC_DENSITY)
+│   ├── pipeline_builder.py # Construção de Pipelines (Sklearn)
+│   ├── train.py          # Treinamento com GridSearchCV
+│   ├── evaluate.py       # Validação e Métricas
+│   ├── plots.py          # Visualizações técnicas
+│   ├── predict.py        # Wrapper de inferência
+│   ├── app.py            # API de Produção (Flask)
+│   └── main.py           # Orquestrador principal
+├── drift/                # Monitoramento (Evidently + PSI)
+├── tests/                # Garantia de qualidade (Pytest)
+├── output/               # Artefatos gerados (Modelos e Gráficos)
+├── app_streamlit.py      # Dashboard do usuário final
+├── requirements.txt      # Dependências do projeto
+└── RELATORIO.md          # Documentação técnica profunda
+```
+
+-----
 
 ## 🚀 Como Executar
 
-### 1. Clone e Prepare o Ambiente
+### 1\. Preparação do Ambiente
+
 ```bash
+# Clone o repositório
 git clone https://github.com/WallasBorges10/bridge_ml_pipeline.git
 cd bridge_ml_pipeline
-python -m venv venv
-source venv/bin/activate  # ou .\venv\Scripts\activate no Windows
+
+# Configure o ambiente virtual
+python3 -m venv venv
+source venv/bin/activate  # Windows: .\venv\Scripts\activate
+
+# Instale as dependências
 pip install -r requirements.txt
 ```
 
-### 2. Execute o Pipeline de Treinamento (Rastreamento MLflow)
-- Inicie o servidor de UI do MLflow em um terminal separado
-   mlflow ui
-- Execute o script principal de experimentação
-   python src/main.py
+### 2\. Ciclo de Treinamento e Rastreamento
 
-Acesse http://localhost:5000 para comparar os experimentos.
+Para rodar o pipeline completo e registrar no MLflow:
 
-### 3. Simule a API de Produção
-- python src/app.py
-Envie uma requisição POST para http://localhost:5001/predict com um JSON de features.
+```bash
+python src/main.py --mode train --output_dir ./output
+```
 
-# 4. Executar Testes e CI/CD (Simulado)
-- pytest tests/
-O pipeline de CI/CD está configurado em .github/workflows/ci.yml e valida testes e linting automaticamente.
+Para visualizar a UI do MLflow:
 
-# 🧱 Estrutura do Projeto (Engenharia)
-.
-├── .github/workflows/      # CI/CD (Testes Automatizados)
-├── data/                   # Dados Brutos e Processados
-├── notebooks/              # Exploração (Apenas Visualização)
-├── src/                    # Código Fonte Modular (Reutilizável)
-│   ├── data/               # Ingestão e Pré-processamento
-│   ├── models/             # Treinamento e Persistência
-│   └── app.py              # API Flask para Inferência
-├── tests/                  # Testes Unitários
-├── RELATORIO.md            # Documento Técnico Completo (Análise Crítica)
-├── requirements.txt        # Dependências Exatas
-└── README.md               # Este Arquivo  
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+### 3\. Servindo o Modelo (API e UI)
+
+  * **API Flask:** `python src/app.py` (Porta 5001)
+  * **Dashboard Streamlit:** `streamlit run app_streamlit.py` (Porta 8501)
+
+-----
+
+## 📈 Resultados e Performance
+
+Os modelos foram avaliados com foco em **Recall**, garantindo que pontes críticas não sejam ignoradas.
+
+| Modelo | Recall | F1-Score | Precisão | Tempo Treino |
+| :--- | :---: | :---: | :---: | :---: |
+| **Random Forest (Tuned)** | **0.9045** | **0.8703** | 0.8386 | 31.5s |
+| Decision Tree | 0.8232 | 0.8405 | 0.8586 | 2.1s |
+| Perceptron (Baseline) | 0.8026 | 0.8194 | 0.8371 | 0.5s |
+
+-----
+
+## 🛡️ Monitoramento e CI/CD
+
+O projeto implementa práticas modernas de **MLOps**:
+
+1.  **CI/CD Pipeline:** Testes automatizados e retreinamento são disparados a cada `push` na branch `main`.
+2.  **Detecção de Drift:** Um processo semanal analisa o **PSI (Population Stability Index)**. Se os dados de entrada mudarem significativamente (PSI \> 0.1), alertas são registrados no MLflow para análise de retreinamento.
+
+-----
+
+## 📖 Documentação Adicional
+
+  * Para uma análise detalhada sobre a redução de dimensionalidade (PCA/LDA) e decisões arquiteturais, acesse o [**Relatório Técnico (RELATORIO.md)**](https://www.google.com/search?q=RELATORIO.md).
+
+-----
+
+## 🎥 Demonstração
+
+*(Vídeo em breve - Demonstrando o uso do Dashboard Streamlit e predições em lote)*
+
+-----
+
+**Desenvolvido por Wallas Borges** – *Projeto Acadêmico para Pós-Graduação em MLOps.*
