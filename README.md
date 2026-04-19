@@ -1,11 +1,3 @@
-Este `README.md` está excelente e muito completo\! Ele já cobre os pilares fundamentais de um projeto de **Engenharia de ML (MLOps)**.
-
-Para dar aquele toque final de "nível profissional", organizei as seções para ficarem mais escaneáveis, adicionei ícones para facilitar a leitura e melhorei a hierarquia visual. Também incluí uma seção de **Tecnologias Utilizadas** para destacar seu *stack* técnico.
-
-Aqui está a versão aprimorada:
-
------
-
 # 🌉 Bridge Condition Prediction – ML Pipeline
 
 [](https://github.com/WallasBorges10/bridge_ml_pipeline/actions/workflows/ml_pipeline.yml)
