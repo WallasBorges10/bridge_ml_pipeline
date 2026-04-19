@@ -1,101 +1,116 @@
 # Relatório Técnico – Projeto de Engenharia de Machine Learning
 
-## 1. Contexto e Evolução do Projeto
+## 1. Estruturação do Projeto de Machine Learning
 
-### 1.1 Mapeamento de Experimentos Anteriores
-O ponto de partida deste projeto foram os experimentos exploratórios conduzidos em notebooks, onde modelos foram testados de forma isolada. A transição para um projeto de engenharia visa resolver a **falta de rastreabilidade** e a **dificuldade de operacionalização** do código original.
+### 1.1 Mapeamento dos Experimentos Realizados
+A transição de notebooks exploratórios para um projeto estruturado de engenharia permitiu o rastreamento sistemático de múltiplos modelos via **MLflow**.
 
-| Modelo | Acurácia (Validação) | Limitações Observadas |
-| :--- | :--- | :--- |
-| **Perceptron Simples** | ~74% | Alta variância; incapaz de capturar padrões não-lineares. |
-| **Árvore de Decisão** | ~82% | Sobreajuste (overfitting) severo sem controle de profundidade. |
-| **KNN** | ~78% | Custo computacional elevado durante a inferência. |
+| Modelo | Principais Hiperparâmetros | Métricas (Validação Cruzada) | Limitações / Observações |
+| :--- | :--- | :--- | :--- |
+| **Perceptron** | `max_iter=1000`, `class_weight='balanced'` | Acurácia ≈ 0,760 | Modelo linear simples; incapaz de capturar padrões complexos. |
+| **Decision Tree** | `max_depth=5`, `class_weight='balanced'` | F1 ≈ 0,840 | Boa interpretabilidade, mas propenso a *overfitting* sem poda. |
+| **Random Forest** | `n_estimators=200`, `class_weight='balanced'` | **Recall ≈ 0,904**, F1 ≈ 0,870 | **Melhor performance geral**; maior custo computacional. |
+| **RF + PCA** | `n_components=0.95` (95% variância) | Recall ≈ 0,891 | Leve perda de recall; ganho marginal em tempo de treino. |
+| **RF + LDA** | `n_components=1` | Recall ≈ 0,790 | Perda significativa de recall; inviável para o negócio. |
+
+> **Nota:** Dados extraídos do MLflow (experimento `bridge_condition_prediction`, runs de 19/04/2026).
 
 ### 1.2 Objetivo Técnico e Métricas de Sucesso
-Construir um classificador binário para prever se uma ponte está em condição **crítica (Fair/Poor)** ou **boa (Good)**, utilizando apenas variáveis disponíveis *antes* da inspeção para evitar o vazamento de dados (*data leakage*).
+* **Objetivo:** Construir um classificador binário (*Good* vs *Critical*) para priorizar a manutenção de infraestruturas.
+* **Métrica Primária:** **Recall da Classe Crítica** – O foco é minimizar Falsos Negativos (pontes críticas não detectadas).
+* **Métrica Secundária:** **F1-Score** – Para garantir que o modelo não classifique todas as pontes como críticas (equilíbrio com Precisão).
+* **Impacto de Negócio:** Otimização de recursos públicos e aumento da segurança viária.
 
-* **Métrica Primária:** Recall da classe crítica (maximizar identificação de riscos).
-* **Métrica Secundária:** F1-score (equilíbrio entre precisão e recall).
-* **Objetivo de Negócio:** Redução de custos operacionais e aumento da segurança estrutural.
-
-### 1.3 Engenharia de Features e Pipeline
-Foram selecionadas **62 features** de domínio, com a exclusão de 14 variáveis que causavam *leakage*.
-* **Novas Features:** `AGE`, `TRAFFIC_DENSITY` e `AGE_NORMALIZED`.
-* **Tratamento de Dados:** * Remoção de colunas com >50% de dados faltantes.
-    * Imputação de mediana (numéricas) e moda (categóricas).
-    * Codificação via *One-Hot Encoding*.
-    * Padronização via `StandardScaler`.
-
----
-
-## 2. Fundação de Dados e Diagnóstico de Qualidade
-
-### 2.1 Estratégia de Ingestão e Amostragem
-* **Fonte:** Dataset público de Pontes (National Bridge Inventory).
-* **Amostragem:** Divisão estratificada (`train_test_split` com `stratify=y`) para preservar a distribuição das classes de condição da ponte.
-
-### 2.2 Diagnóstico de Riscos e Mitigação
-1.  **Dados Ausentes (Missing Values):** Colunas com alta vacância foram removidas para evitar ruído. A imputação por mediana foi escolhida por sua robustez contra outliers.
-2.  **Viés de Representação:** Identificou-se predominância de pontes federais. O risco de degradação de performance em pontes municipais (Drift) será monitorado via **PSI (Population Stability Index)**.
-3.  **Inconsistências Categóricas:** Padronização de strings (`lowercase` e `strip`) aplicada no pré-processamento.
+### 1.3 Arquitetura Modular do Código (`src/`)
+A lógica foi fragmentada em módulos independentes para facilitar a manutenção e o deploy:
+* `config.py`: Gestão de constantes e parâmetros.
+* `data_loader.py`: Ingestão de dados brutos e remoção de *leakage*.
+* `preprocessing.py`: Engenharia de novas variáveis (`AGE`, `TRAFFIC_DENSITY`).
+* `pipeline_builder.py`: Automação do `ColumnTransformer` e transformações dimensionais.
+* `train.py` & `evaluate.py`: Treinamento com *GridSearchCV* e cálculo de performance.
+* `app.py`: API Flask para servir predições em tempo real.
+* `drift_detection.py`: Monitoramento de desvio de dados com **Evidently AI**.
 
 ---
 
-## 3. Análise Comparativa de Experimentos
+## 2. Fundação de Dados e Diagnóstico Inicial
 
-Os resultados abaixo foram registrados e versionados utilizando o **MLflow** no experimento `bridge_condition_prediction`.
+### 2.1 Estrutura de Ingestão e Amostragem
+* **Dataset:** FHWA NBI - Nova York (17.666 registros).
+* **Divisão:** Amostragem estratificada (70% treino / 30% teste) para lidar com o desbalanceamento.
 
-| Modelo | Recall | F1 | Precisão | Acurácia | Treino (s) | Inferência (ms) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Perceptron (baseline) | 0,8026 | 0,8194 | 0,8371 | 0,7604 | 0,5 | 0,02 |
-| Decision Tree (tuned) | 0,8232 | 0,8405 | 0,8586 | 0,7883 | 2,1 | 0,03 |
-| **Random Forest (tuned)** | **0,9045** | **0,8703** | 0,8386 | 0,8174 | 31,5 | 0,12 |
-| RF + PCA (95% var) | 0,8910 | 0,8590 | 0,8097 | 0,8009 | 28,1 | 0,10 |
-| RF + LDA (1 comp.) | 0,7900 | 0,8241 | 0,8613 | 0,7715 | 24,7 | 0,09 |
+### 2.2 Diagnóstico de Qualidade e Ações Corretivas
 
----
+| Problema Identificado | Ação Tomada |
+| :--- | :--- |
+| **Missing Values (>50%)** | Remoção de 11 colunas altamente incompletas. |
+| **Data Leakage** | Exclusão de 14 variáveis registradas apenas *após* a inspeção física. |
+| **Desbalanceamento** | Aplicação de `class_weight='balanced'` no treinamento. |
+| **Inconsistências** | Padronização de strings (`lowercase`) e aplicação de *One-Hot Encoding*. |
 
-## 4. Redução de Dimensionalidade
-
-### 4.1 Técnicas Avaliadas
-* **PCA (Principal Component Analysis):** Utilizada para redução de ruído, mantendo 95% da variância explicada.
-* **LDA (Linear Discriminant Analysis):** Focada na maximização da separabilidade das classes (reduzida a 1 componente).
-
-### 4.2 Impacto e Conclusão
-Embora o PCA tenha reduzido o tempo de treino em 10%, houve uma queda no Recall e F1. O LDA mostrou-se inviável, com perda significativa de performance (Recall caiu para 0,79). **Conclusão:** A redução de dimensionalidade não é recomendada para o deploy final, visto que o Random Forest lida bem com a dimensionalidade original e a perda de sensibilidade clínica/técnica é inaceitável para o negócio.
+### 2.3 Limitações Estruturais
+O modelo é altamente dependente da qualidade do campo `ADT_029` (Tráfego Diário), que pode estar defasado. Além disso, a ausência de dados geoespaciais impede a análise de fatores climáticos locais (ex: proximidade do mar e corrosão).
 
 ---
 
-## 5. Modelo Final Escolhido
+## 3. Experimentação Sistemática (Resultados Reais)
 
-O modelo selecionado para produção foi o **Random Forest (Tuned)**.
+A tabela abaixo consolida as métricas registradas na run `full_pipeline` do MLflow (ID: `de0ad91c944c485ebd076dd7738ffded`).
 
-* **Configuração de Hiperparâmetros:**
-    * `n_estimators`: 200
-    * `max_depth`: None (expansão total)
-    * `class_weight`: 'balanced' (correção de desbalanceamento)
-
-* **Justificativa:** Apresentou o maior **Recall (0,9045)**, garantindo que a maioria das pontes em estado crítico seja identificada. Além disso, oferece interpretabilidade através da importância das variáveis (*feature importances*).
+| Modelo | Recall | F1-Score | Precisão | Acurácia | Treino (s) | Inferência (ms) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| Perceptron (Baseline) | 0,8026 | 0,8194 | 0,8371 | 0,7604 | 0,5 | 0,02 |
+| Decision Tree (Tuned) | 0,8232 | 0,8405 | 0,8586 | 0,7883 | 2,1 | 0,03 |
+| **Random Forest (Tuned)** | **0,9045** | **0,8703** | 0,8386 | 0,8174 | 31,5 | 0,12 |
+| RF + PCA (95% Var) | 0,8910 | 0,8590 | 0,8097 | 0,8009 | 28,1 | 0,10 |
+| RF + LDA (1 Comp.) | 0,7900 | 0,8241 | 0,8613 | 0,7715 | 24,7 | 0,09 |
 
 ---
 
-## 6. Operacionalização e Monitoramento
+## 4. Controle de Complexidade e Redução de Dimensionalidade
 
-### 6.1 Versionamento e Registro
-O artefato final foi salvo como `modelo_pontes_ny_rf_deploy.joblib` e registrado no **MLflow Model Registry**:
-* **Nome:** `BridgeConditionRF`
-* **Versão:** 1
-* **Estágio:** Production
+### 4.1 Avaliação de PCA e LDA
+* **PCA:** Reduziu levemente a performance, mas não trouxe ganho computacional que justificasse a perda de interpretabilidade das *features*.
+* **LDA:** Degradou severamente o Recall (-11,4%), tornando o modelo perigoso para a aplicação de segurança pública (muitos Falsos Negativos).
+
+**Conclusão:** O uso de redução de dimensionalidade foi **descartado** para o modelo de produção, optando-se pelo Random Forest sobre o conjunto completo de features.
+
+---
+
+## 5. Seleção e Justificativa do Modelo Final
+
+O **Random Forest (Tuned)** foi o escolhido para o deploy.
+
+* **Hiperparâmetros:** `n_estimators=200`, `max_depth=None`, `class_weight='balanced'`.
+* **Poder de Decisão:** O Recall de **90,45%** garante que 9 em cada 10 pontes críticas serão corretamente sinalizadas pelo sistema.
+* **Interpretabilidade:** Permite extrair a importância das variáveis para auditoria técnica de engenheiros civis.
+
+---
+
+## 6. Operacionalização e Produção (MLOps)
+
+### 6.1 Versionamento (Model Registry)
+O modelo está registrado no MLflow Model Registry como `BridgeConditionRF` (Versão 1), sob o estágio **Production**.
 
 ### 6.2 API de Inferência
-Uma API Flask foi desenvolvida para servir o modelo em tempo real através do endpoint `/predict`.
-
-**Exemplo de Requisição (cURL):**
+Exemplo de requisição para o serviço Flask:
 ```bash
 curl -X POST http://localhost:5001/predict \
      -H "Content-Type: application/json" \
-     -d @input.json
+     -d '{"YEAR_BUILT_027": 1950, "TRAFFIC_DENSITY": 150.5, "STRUCTURE_KIND_043A": 1}'
 ```
 
-### 6.3 Estratégia de Monitoramento
-O sistema conta com um detector de drift (`drift_detector.py`) que avalia periodicamente a estabilidade da população de entrada para identificar quando o modelo precisa ser retreinado devido a mudanças nas características das pontes inspecionadas.
+### 6.3 Monitoramento de Drift
+Utilizamos o **PSI (Population Stability Index)** para monitorar mudanças na distribuição dos dados de entrada.
+* **Alerta:** Caso o PSI seja superior a **0.1**, um alerta é disparado no MLflow.
+* **Ação:** Retreinamento automático é agendado caso a performance de Recall caia abaixo de 85% em novos dados rotulados.
+
+---
+
+## 7. Conclusão
+
+Este projeto demonstra a maturidade de um pipeline de engenharia completo. A escolha do **Random Forest** validada por experimentos rastreáveis garante uma solução robusta, enquanto a automação via CI/CD e o monitoramento de *drift* asseguram que o modelo permaneça confiável ao longo do tempo.
+
+---
+*Relatório gerado automaticamente a partir de logs do MLflow.*
+*Repositório:* [bridge_ml_pipeline](https://github.com/WallasBorges10/bridge_ml_pipeline.git)
